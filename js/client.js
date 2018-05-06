@@ -63,7 +63,7 @@ TrelloPowerUp.initialize({
   "card-buttons": function(t, options) {
     return [
       {
-        icon: `.${GRAY_ICON}`, // Absolute path takes Trello base URL
+        icon: GRAY_ICON,
         text: "Templates",
         callback: cardButtonCallback
       }

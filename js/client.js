@@ -5,9 +5,32 @@ import request from "superagent";
 import GRAY_ICON from "/images/icon-gray.svg";
 
 const TRELLO_API_KEY = "f29cdcb85b50ce35ec98517e1508e5cc";
+const TRELLO_API_BASE_URL = "https://api.trello.com/1";
 
-const addCredentials = async (request, token) =>
-  `${request}&key=${TRELLO_API_KEY}&token=${token}`;
+const generateApiCredentials = token => ({
+  key: TRELLO_API_KEY,
+  token
+});
+
+const changeCardDescription = async (cardId, desc, token) =>
+  request
+    .put(`${TRELLO_API_BASE_URL}/cards/${cardId}`)
+    .query({ desc })
+    .query(generateApiCredentials(token));
+
+const addTemplateChecklists = async (cardId, templateId, token) => {
+  const { body: templateChecklists } = await request
+    .get(`${TRELLO_API_BASE_URL}/cards/${templateId}/checklists`)
+    .query(generateApiCredentials(token));
+  return Promise.all(
+    templateChecklists.map(({ id }) =>
+      request
+        .post(`${TRELLO_API_BASE_URL}/cards/${cardId}/checklists`)
+        .query({ idChecklistSource: id })
+        .query(generateApiCredentials(token))
+    )
+  );
+};
 
 const cardButtonCallback = async t => {
   const lists = await t.lists("all");
@@ -19,13 +42,8 @@ const cardButtonCallback = async t => {
     text: template.name,
     callback: async t => {
       const token = await t.get("member", "private", "token");
-      const url = await addCredentials(
-        `https://api.trello.com/1/cards/${cardId}?desc=${encodeURIComponent(
-          template.desc
-        )}`,
-        token
-      );
-      await request.put(url);
+      await changeCardDescription(cardId, template.desc, token);
+      await addTemplateChecklists(cardId, template.id, token);
       t.closePopup();
     }
   }));
@@ -45,8 +63,8 @@ TrelloPowerUp.initialize({
   "card-buttons": function(t, options) {
     return [
       {
-        icon: `.${GRAY_ICON}`,
-        text: "Open Popup",
+        icon: `.${GRAY_ICON}`, // Absolute path takes Trello base URL
+        text: "Templates",
         callback: cardButtonCallback
       }
     ];

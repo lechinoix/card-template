@@ -12,7 +12,7 @@ const generateApiCredentials = token => ({
   token
 });
 
-const changeCardDescription = async (cardId, desc, token) =>
+const changeCardDescription = (cardId, desc, token) =>
   request
     .put(`${TRELLO_API_BASE_URL}/cards/${cardId}`)
     .query({ desc })

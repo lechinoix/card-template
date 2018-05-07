@@ -18,18 +18,37 @@ const changeCardDescription = async (cardId, desc, token) =>
     .query({ desc })
     .query(generateApiCredentials(token));
 
-const addTemplateChecklists = async (cardId, templateId, token) => {
-  const { body: templateChecklists } = await request
-    .get(`${TRELLO_API_BASE_URL}/cards/${templateId}/checklists`)
+const getCardChecklists = (cardId, token) =>
+  request
+    .get(`${TRELLO_API_BASE_URL}/cards/${cardId}/checklists`)
     .query(generateApiCredentials(token));
-  return Promise.all(
-    templateChecklists.map(({ id }) =>
+
+const resetCardChecklists = async (cardId, templateId, token) => {
+  // Get the checklists of the template and the current card
+  const [
+    { body: templateChecklists },
+    { body: cardChecklists }
+  ] = await Promise.all([
+    getCardChecklists(templateId, token),
+    getCardChecklists(cardId, token)
+  ]);
+
+  // Delete current checklists
+  await Promise.all(
+    cardChecklists.map(({ id }) =>
       request
-        .post(`${TRELLO_API_BASE_URL}/cards/${cardId}/checklists`)
-        .query({ idChecklistSource: id })
+        .delete(`${TRELLO_API_BASE_URL}/checklists/${id}`)
         .query(generateApiCredentials(token))
     )
   );
+
+  // Sequentially add template checklists to card (to keep order)
+  for (var checklist of templateChecklists.sort((a, b) => a.pos > b.pos)) {
+    await request
+      .post(`${TRELLO_API_BASE_URL}/cards/${cardId}/checklists`)
+      .query({ idChecklistSource: checklist.id })
+      .query(generateApiCredentials(token));
+  }
 };
 
 const cardButtonCallback = async t => {
@@ -43,7 +62,7 @@ const cardButtonCallback = async t => {
     callback: async t => {
       const token = await t.get("member", "private", "token");
       await changeCardDescription(cardId, template.desc, token);
-      await addTemplateChecklists(cardId, template.id, token);
+      await resetCardChecklists(cardId, template.id, token);
       t.closePopup();
     }
   }));
@@ -60,42 +79,30 @@ const cardButtonCallback = async t => {
 };
 
 TrelloPowerUp.initialize({
-  "card-buttons": function(t, options) {
-    return [
-      {
-        icon: GRAY_ICON,
-        text: "Templates",
-        callback: cardButtonCallback
-      }
-    ];
-  },
-  "show-settings": function(t, options) {
-    return t.popup({
+  "card-buttons": (t, options) => [
+    {
+      icon: GRAY_ICON,
+      text: "Templates",
+      callback: cardButtonCallback
+    }
+  ],
+  "show-settings": (t, options) =>
+    t.popup({
       title: "Settings",
       url: settingsPage,
       height: 184
-    });
+    }),
+  "authorization-status": async (t, options) => {
+    const token = await t.get("member", "private", "token");
+    return { authorized: !!token };
   },
-  "authorization-status": function(t, options) {
-    return t.get("member", "private", "token").then(function(token) {
-      if (token) {
-        return { authorized: true };
-      }
-      return { authorized: false };
-    });
-  },
-  "show-authorization": function(t, options) {
-    if (TRELLO_API_KEY) {
-      return t.popup({
-        title: "Auth Popup",
-        args: { apiKey: TRELLO_API_KEY },
-        url: "./authorize.html",
-        height: 140
-      });
-    } else {
-      console.log("🙈 Looks like you need to add your API key to the project!");
-    }
-  }
+  "show-authorization": (t, options) =>
+    t.popup({
+      title: "Auth Popup",
+      args: { apiKey: TRELLO_API_KEY },
+      url: "./authorize.html",
+      height: 140
+    })
 });
 
 console.log("Loaded by: " + document.referrer);

@@ -12,11 +12,11 @@ const generateApiCredentials = token => ({
   token
 });
 
-const changeCardDescription = (cardId, desc, token) =>
-  request
-    .put(`${TRELLO_API_BASE_URL}/cards/${cardId}`)
-    .query({ desc })
-    .query(generateApiCredentials(token));
+// const changeCardDescription = (cardId, desc, token) =>
+//   request
+//     .put(`${TRELLO_API_BASE_URL}/cards/${cardId}`)
+//     .query({ desc })
+//     .query(generateApiCredentials(token));
 
 const getCardChecklists = (cardId, token) =>
   request
@@ -32,15 +32,6 @@ const resetCardChecklists = async (cardId, templateId, token) => {
     getCardChecklists(templateId, token),
     getCardChecklists(cardId, token)
   ]);
-
-  // Delete current checklists
-  await Promise.all(
-    cardChecklists.map(({ id }) =>
-      request
-        .delete(`${TRELLO_API_BASE_URL}/checklists/${id}`)
-        .query(generateApiCredentials(token))
-    )
-  );
 
   // Sequentially add template checklists to card (to keep order)
   for (var checklist of templateChecklists.sort((a, b) => a.pos > b.pos)) {
@@ -61,7 +52,7 @@ const cardButtonCallback = async t => {
     text: template.name,
     callback: async t => {
       const token = await t.get("member", "private", "token");
-      await changeCardDescription(cardId, template.desc, token);
+      // await changeCardDescription(cardId, template.desc, token);
       await resetCardChecklists(cardId, template.id, token);
       t.closePopup();
     }

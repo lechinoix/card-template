@@ -7,6 +7,9 @@ import GRAY_ICON from "/images/icon-gray.svg";
 const TRELLO_API_KEY = "f29cdcb85b50ce35ec98517e1508e5cc";
 const TRELLO_API_BASE_URL = "https://api.trello.com/1";
 
+// Remove opening / of the path
+const grayIconPath = "." + GRAY_ICON.replace(process.env.PUBLIC_URL, "");
+
 const generateApiCredentials = token => ({
   key: TRELLO_API_KEY,
   token
@@ -72,7 +75,7 @@ const cardButtonCallback = async t => {
 TrelloPowerUp.initialize({
   "card-buttons": (t, options) => [
     {
-      icon: GRAY_ICON,
+      icon: grayIconPath,
       text: "Templates",
       callback: cardButtonCallback
     }

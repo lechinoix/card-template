@@ -12,7 +12,9 @@ const files = [
 const buildDir = Path.join(__dirname, "./dist");
 
 const watchServer = async () => {
-  const bundler = new Bundler(files);
+  const bundler = new Bundler(files, {
+    publicPath: "/"
+  });
 
   // Run the bundler, this returns the main bundle
   // Use the events if you're using watch mode as this promise will only trigger once and not for every rebuild
@@ -28,6 +30,8 @@ const watchServer = async () => {
 
 You can now link your Trello board with this iframe URL to see your changes live to Trello
 😎 😎
+
+
   `);
 };
 

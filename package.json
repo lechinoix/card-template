@@ -11,7 +11,7 @@
     "watch": "yarn parcel watch authorize.html auth-success.html index.html",
     "server:local": "yarn serve dist",
     "build":
-      "yarn parcel build --public-url /card-template/ authorize.html auth-success.html index.html",
+      "PUBLIC_URL=/card-template yarn parcel build --public-url /card-template/ authorize.html auth-success.html index.html",
     "predeploy": "yarn build",
     "deploy": "gh-pages -d dist"
   },

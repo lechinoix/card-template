@@ -7,7 +7,7 @@
   "author": "lechinoix <nicolasn@theodo.fr>",
   "license": "MIT",
   "scripts": {
-    "start": "yarn watch & yarn server:local",
+    "start": "node server.js",
     "watch": "yarn parcel watch authorize.html auth-success.html index.html",
     "server:local": "yarn serve dist",
     "build":
@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "gh-pages": "^1.1.0",
+    "ngrok": "^3.0.1",
     "parcel": "^1.8.1",
     "serve": "^6.5.6",
     "superagent": "^3.8.3"
